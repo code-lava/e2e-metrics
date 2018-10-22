@@ -51,7 +51,7 @@ def read_tsv(tsv_file):
 
     errs = [line_no for line_no, item in enumerate(tsv_data, start=1) if len(item) != 2]
     if errs:
-        print "%s -- weird number of values" % tsv_file
+        print("%s -- weird number of values" % tsv_file)
         raise ValueError('%s -- Weird number of values on lines: %s' % (tsv_file, str(errs)))
 
     # remove quotes
@@ -67,7 +67,7 @@ def read_tsv(tsv_file):
     # check quotes
     errs = [line_no for line_no, sys in enumerate(refs, start=1) if '"' in sys]
     if errs:
-        print "%s -- has quotes" % tsv_file
+        print("%s -- has quotes" % tsv_file)
         raise ValueError('%s -- Quotes on lines: %s' % (tsv_file, str(errs)))
 
     return srcs, refs
@@ -80,13 +80,13 @@ def read_and_check_tsv(sys_file, src_file):
     sys_srcs, sys_outs = read_tsv(sys_file)
     # check integrity
     if len(sys_outs) != len(src_data):
-        print "%s -- wrong data length" % sys_file
+        print("%s -- wrong data length" % sys_file)
         raise ValueError('%s -- SYS data of different length than SRC: %d' % (sys_file, len(sys_outs)))
     # check sameness
     errs = [line_no for line_no, (sys, ref) in enumerate(zip(sys_srcs, src_data), start=1)
             if sys != ref]
     if errs:
-        print "%s -- SRC fields not the same as reference" % sys_file
+        print("%s -- SRC fields not the same as reference" % sys_file)
         raise ValueError('%s -- The SRC fields in SYS data are not the same as reference SRC on lines: %s' % (sys_file, str(errs)))
 
     # return the checked data
@@ -190,6 +190,7 @@ def load_data(ref_file, sys_file, src_file=None):
             data_ref = [[inst] for inst in data_ref[0]]
 
     # sanity check
+    # print(len(data_ref), len(data_sys), len(data_src))
     assert(len(data_ref) == len(data_sys) == len(data_src))
     return data_src, data_ref, data_sys
 
@@ -211,23 +212,23 @@ def evaluate(data_src, data_ref, data_sys,
     scores.update(mteval_scores)
 
     # print out the results
-    metric_names = ['BLEU', 'NIST', 'METEOR', 'ROUGE_L', 'CIDEr']
+    metric_names = ['BLEU', 'NIST', 'ROUGE_L', 'CIDEr', 'METEOR']
     if print_as_table:
         if print_table_header:
-            print '\t'.join(['File'] + metric_names)
-        print '\t'.join([sys_fname] + ['%.4f' % scores[metric] for metric in metric_names])
+            print('\t'.join(['File'] + metric_names))
+        print('\t'.join([sys_fname] + ['%.4f' % scores[metric] for metric in metric_names]))
     else:
-        print 'SCORES:\n=============='
+        print('SCORES:\n==============')
         for metric in metric_names:
-            print '%s: %.4f' % (metric, scores[metric])
-        print
+            print('%s: %.4f' % (metric, scores[metric]))
+    return metric_names, scores
 
 
 def run_mteval(data_ref, data_sys, data_src):
     """Run document-level BLEU and NIST via mt-eval13b (Perl)."""
     # create temp directory
     temp_path = mkdtemp(prefix='e2e-eval-')
-    print >> sys.stderr, 'Creating temp directory ', temp_path
+    print('Creating temp directory ', temp_path)
 
     # create MTEval files
     mteval_ref_file = os.path.join(temp_path, 'mteval_ref.sgm')
@@ -239,7 +240,7 @@ def run_mteval(data_ref, data_sys, data_src):
     mteval_log_file = os.path.join(temp_path, 'mteval_log.txt')
 
     # run MTEval
-    print >> sys.stderr, 'Running MTEval to compute BLEU & NIST...'
+    print('Running MTEval to compute BLEU & NIST...')
     mteval_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                'mteval', 'mteval-v13a-sig.pl')
     mteval_out = subprocess.check_output(['perl', mteval_path,
@@ -247,12 +248,12 @@ def run_mteval(data_ref, data_sys, data_src):
                                           '-s', mteval_src_file,
                                           '-t', mteval_sys_file,
                                           '-f', mteval_log_file], stderr=subprocess.STDOUT)
-    nist = float(re.search(r'NIST score = ([0-9.]+)', mteval_out).group(1))
-    bleu = float(re.search(r'BLEU score = ([0-9.]+)', mteval_out).group(1))
-    print >> sys.stderr, mteval_out
+    nist = float(re.search(r'NIST score = ([0-9.]+)', mteval_out.decode('utf8')).group(1))
+    bleu = float(re.search(r'BLEU score = ([0-9.]+)', mteval_out.decode('utf8')).group(1))
+    print(mteval_out)
 
     # delete the temporary directory
-    print >> sys.stderr, 'Removing temp directory'
+    print('Removing temp directory')
     shutil.rmtree(temp_path)
 
     return {'NIST': nist, 'BLEU': bleu}
@@ -261,7 +262,7 @@ def run_mteval(data_ref, data_sys, data_src):
 def run_pymteval(data_ref, data_sys):
     """Run document-level BLEU and NIST in their Python implementation (should give the
     same results as Perl)."""
-    print >> sys.stderr, 'Running Py-MTEval metrics...'
+    print('Running Py-MTEval metrics...')
     bleu = BLEUScore()
     nist = NISTScore()
 
@@ -281,7 +282,7 @@ def run_coco_eval(data_ref, data_sys):
     coco_ref = create_coco_refs(data_ref)
     coco_sys = create_coco_sys(data_sys)
 
-    print >> sys.stderr, 'Running MS-COCO evaluator...'
+    print('Running MS-COCO evaluator...')
     coco = COCO()
     coco.dataset = coco_ref
     coco.createIndex()
@@ -297,7 +298,7 @@ def sent_level_scores(data_src, data_ref, data_sys, out_fname):
     """Collect segment-level scores for the given data and write them out to a TSV file."""
     res_data = []
     headers = ['src', 'sys_out', 'BLEU', 'sentBLEU', 'NIST']
-    coco_scorers = ['METEOR', 'ROUGE_L', 'CIDEr']
+    coco_scorers = ['ROUGE_L', 'CIDEr', 'METEOR']
     mteval_scorers = [BLEUScore(), BLEUScore(smoothing=1.0), NISTScore()]
     headers.extend(coco_scorers)
 
