@@ -196,7 +196,7 @@ def load_data(ref_file, sys_file, src_file=None):
 
 
 def evaluate(data_src, data_ref, data_sys,
-             print_as_table=False, print_table_header=False, sys_fname='',
+             print_output=False, print_as_table=False, print_table_header=False, sys_fname='',
              python=False):
     """Main procedure, running the MS-COCO & MTEval evaluators on the loaded data."""
 
@@ -217,7 +217,7 @@ def evaluate(data_src, data_ref, data_sys,
         if print_table_header:
             print('\t'.join(['File'] + metric_names))
         print('\t'.join([sys_fname] + ['%.4f' % scores[metric] for metric in metric_names]))
-    else:
+    if print_output:
         print('SCORES:\n==============')
         for metric in metric_names:
             print('%s: %.4f' % (metric, scores[metric]))
