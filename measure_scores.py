@@ -190,7 +190,7 @@ def load_data(ref_file, sys_file, src_file=None):
             data_ref = [[inst] for inst in data_ref[0]]
 
     # sanity check
-    # print(len(data_ref), len(data_sys), len(data_src))
+    print(len(data_ref), len(data_sys), len(data_src))
     assert(len(data_ref) == len(data_sys) == len(data_src))
     return data_src, data_ref, data_sys
 
