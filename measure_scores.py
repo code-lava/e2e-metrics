@@ -10,9 +10,9 @@ import subprocess
 import re
 import sys
 
-from pycocotools.coco import COCO
-from pycocoevalcap.eval import COCOEvalCap
-from metrics.pymteval import BLEUScore, NISTScore
+from e2emetrics.pycocotools.coco import COCO
+from e2emetrics.pycocoevalcap.eval import COCOEvalCap
+from e2emetrics.metrics.pymteval import BLEUScore, NISTScore
 
 
 def read_lines(file_name, multi_ref=False):
